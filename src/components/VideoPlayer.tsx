@@ -1,7 +1,10 @@
-import "./styles/VideoPlayer.css";
+import { useNavigate } from "react-router-dom";
 import video from "@assets/node_assets/nvideo.mp4";
+import "./styles/VideoPlayer.css";
 
 export default function VideoPlayer() {
+  const navigate = useNavigate();
+
   return (
     <div className="video-player">
       <video
@@ -12,7 +15,7 @@ export default function VideoPlayer() {
         <source src={video} />
       </video>
 
-      <span className="material-symbols-outlined back">arrow_back</span>
+      <span className="material-symbols-outlined back" onClick={() => navigate("/")}>arrow_back</span>
     </div>
   );
 }

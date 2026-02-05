@@ -23,7 +23,7 @@
     cursor: pointer;
 
     &:hover {
-      background-color: #30303030;
+      background-color: rgba(80, 80, 80, 0.5);
     }
   }
 

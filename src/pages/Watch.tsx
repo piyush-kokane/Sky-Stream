@@ -127,7 +127,7 @@ export default function Watch() {
                 <div className="avatar">
                   <img
                     className="avatar"
-                    src={"avatar"}
+                    src={"https://randomuser.me/api/portraits/men/1.jpg"}
                     alt=""
                     onError={(e) => {
                       e.currentTarget.remove();
