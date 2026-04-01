@@ -1,7 +1,19 @@
 import icon from "@assets/SkyStream-logo.png";
+import { useAuth } from "react-oidc-context";
 import "./styles/Navbar.css";
 
-export default function Navbar() {
+type NavbarProps = {
+  onGoLive: () => void;
+};
+
+export default function Navbar({ onGoLive }: NavbarProps) {
+  const auth = useAuth();
+
+  const handleLogout = () => {
+    auth.removeUser();
+    auth.signoutRedirect();
+  };
+
   return (
     <div className="navbar">
       <div className="nav-left">
@@ -11,18 +23,25 @@ export default function Navbar() {
       </div>
 
       <div className="nav-center">
+        {/*
         <div className="search-bar">
           <input placeholder="Search" />
           <span className="material-symbols-outlined">search</span>
         </div>
+        */}
       </div>
 
       <div className="nav-right">
-        <button>
+        <button onClick={onGoLive}>
           <span className="material-symbols-outlined">videocam</span>
           Go live
         </button>
-        <span className="notifications material-symbols-outlined">notifications</span>
+        <button className="logout-btn" onClick={handleLogout}>
+          Sign Out
+        </button>
+        {/*
+          <span className="notifications material-symbols-outlined">notifications</span>
+        */}
         <div className="avatar">
           <img
             className="avatar"

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import "./styles/VideoCard.css";
 
 type VideoCardProps = {
+  playbackUrl: string;
   thumbnail?: string;
   avatar?: string;
   title: string;
@@ -12,6 +13,7 @@ type VideoCardProps = {
 };
 
 export default function VideoCard({
+  playbackUrl,
   thumbnail,
   avatar,
   title,
@@ -25,7 +27,7 @@ export default function VideoCard({
   return (
     <div 
       className={`video-card ${isLive ? "live" : ""}`}
-      onClick={() => navigate(`/watch/${channelName}`)}
+      onClick={() => navigate(`/watch/${encodeURIComponent(playbackUrl)}`)}
     >
       <div className="thumbnail">
         <img
