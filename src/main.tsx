@@ -1,4 +1,4 @@
-;import { StrictMode } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "react-oidc-context";
@@ -7,19 +7,21 @@ import App from "./App.tsx";
 import "./index.css";
 
 
-const redirectUri = `${window.location.origin}`; // signin Redirect Uri
+const redirectUri = window.location.hostname === "localhost"
+  ? `${window.location.origin}/`
+  : "https://skydrive.onkaarkale.workers.dev/";
 
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xiLlUkbyV",
-  client_id: "1sel5r7k42ls80ubk82fsv5uel",
+  authority: "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_zrTYaJ2yz",
+  client_id: "6hvkjdauc0gspl7mtlmt4ns0nt",
   redirect_uri: redirectUri,
+  post_logout_redirect_uri: redirectUri,
   response_type: "code",
-  scope: "openid email phone",
-  //automaticSilentSignin: false, // important: don't redirect automatically
-  //loadUserInfo: true,
+  scope: "email openid phone",
 };
 
-createRoot(document.getElementById('root')!).render(
+
+createRoot(document.getElementById("root")!).render(
   //<StrictMode>
     <AuthProvider {...cognitoAuthConfig}>
       <BrowserRouter>
@@ -29,4 +31,4 @@ createRoot(document.getElementById('root')!).render(
       </BrowserRouter>
     </AuthProvider>
   //</StrictMode>
-)
+);

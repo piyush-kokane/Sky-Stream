@@ -1,159 +1,165 @@
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import VideoCard from "@/components/VideoCard";
+import { useEffect, useState, useRef } from "react";
+import { toast } from "react-hot-toast";
+import Hls from "hls.js";
 import "@pages/styles/Home.css";
 
+import GoLive from "@components/GoLive";
+import Navbar from "@/components/Navbar";
+import VideoCard from "@/components/VideoCard";
 
 
-const videos = [
-  {
-    thumbnail: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg0_yD3ZkGf1I-YeEnSxMToHKWn3Y5dSihPQ&s",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    title: "Only This Video Works",
-    channelName: "SkyStream",
-    category: "Stream",
-    watching: "18.2K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?2",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-    title: "Late Night Chill Music",
-    channelName: "LoFi Beats",
-    category: "Music",
-    watching: "9.4K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?3",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    title: "Live Football Match Commentary",
-    channelName: "Sports Hub",
-    category: "Sports",
-    watching: "32.1K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?4",
-    avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-    title: "Valorant Tournament Finals",
-    channelName: "Esports Arena",
-    category: "Esports",
-    watching: "45.8K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?5",
-    avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-    title: "Speedrun World Record Attempt",
-    channelName: "GameRush",
-    category: "Gaming",
-    watching: "12.7K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?6",
-    avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-    title: "DJ Set – EDM Live Mix",
-    channelName: "Bass Nation",
-    category: "Music",
-    watching: "21.3K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?7",
-    avatar: "https://randomuser.me/api/portraits/men/7.jpg",
-    title: "Cricket Match Analysis",
-    channelName: "CricTalks",
-    category: "Sports",
-    watching: "15.9K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?8",
-    avatar: "https://randomuser.me/api/portraits/women/8.jpg",
-    title: "CS2 Pro Scrims Live",
-    channelName: "FragZone",
-    category: "Esports",
-    watching: "28.4K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?9",
-    avatar: "https://randomuser.me/api/portraits/men/9.jpg",
-    title: "Minecraft Hardcore Survival",
-    channelName: "BlockVerse",
-    category: "Gaming",
-    watching: "7.6K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?10",
-    avatar: "https://randomuser.me/api/portraits/women/10.jpg",
-    title: "Acoustic Covers Live",
-    channelName: "Soul Strings",
-    category: "Music",
-    watching: "11.2K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?11",
-    avatar: "https://randomuser.me/api/portraits/men/11.jpg",
-    title: "NBA Game Night",
-    channelName: "Hoops Live",
-    category: "Sports",
-    watching: "19.5K",
-    isLive: true,
-  },
-  {
-    thumbnail: "https://picsum.photos/640/360?12",
-    avatar: "https://randomuser.me/api/portraits/men/12.jpg",
-    title: "League of Legends Ranked",
-    channelName: "SummonerX",
-    category: "Esports",
-    watching: "34.6K",
-    isLive: true,
-  },
-];
+interface Stream {
+  streamId: string;
+  title: string;
+  username: string;
+  category: string;
+  thumbnailUrl: string;
+  playbackUrl: string;
+  viewerCount: number;
+  isLive: boolean;
+  avatarUrl: string;
+}
 
+type HomeProps = {
+  showGoLive: boolean;
+  setShowGoLive: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
+function Home({ showGoLive, setShowGoLive }: HomeProps) {
+  const [streams, setStreams] = useState<Stream[]>([]);
+  const [selectedStream, setSelectedStream] = useState<Stream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [loading, setLoading] = useState(true);
 
-function Home() {
+  // Helper for random avatar
+  const getRandomAvatar = (i: number) =>
+    `https://randomuser.me/api/portraits/men/${i % 100}.jpg`;
+
+  // -----------------------------
+  // Fetch live streams
+  // -----------------------------
+  const fetchStreams = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        "https://2bjtydde2g.execute-api.us-east-1.amazonaws.com/prod/live-streams"
+      );
+
+      let data: unknown = await res.json();
+
+      // Parse API Gateway response safely
+      if (
+        typeof data === "object" &&
+        data !== null &&
+        "body" in data &&
+        typeof (data as any).body === "string"
+      ) {
+        data = JSON.parse((data as { body: string }).body);
+      }
+
+      if (!Array.isArray(data)) data = [];
+
+      const mappedStreams: Stream[] = (data as any[]).map((s, i) => ({
+        streamId: s.playbackUrl || String(i),
+        title: s.title || "Untitled Stream",
+        username: s.username || s.userId || "Anonymous",
+        category: s.category || "General",
+        thumbnailUrl: s.thumbnailUrl || "/placeholder.jpg",
+        playbackUrl: s.playbackUrl || "",
+        viewerCount: s.viewerCount ?? 0,
+        isLive: true,
+        avatarUrl: getRandomAvatar(i), // RANDOM AVATAR
+      }));
+
+      setStreams(mappedStreams);
+    } catch (err) {
+      console.error("Failed to fetch streams:", err);
+      setStreams([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStreams();
+    const interval = setInterval(fetchStreams, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // -----------------------------
+  // Open stream
+  // -----------------------------
+  const openStream = (stream: Stream) => {
+    if (!stream.playbackUrl) {
+      toast.error("This stream cannot be played right now.");
+      return;
+    }
+    setSelectedStream(stream);
+  };
+
+  // -----------------------------
+  // HLS Playback
+  // -----------------------------
+  useEffect(() => {
+    if (selectedStream?.playbackUrl && videoRef.current) {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(selectedStream.playbackUrl);
+        hls.attachMedia(videoRef.current);
+
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          console.error("HLS.js error:", data);
+        });
+
+        return () => {
+          hls.destroy();
+        };
+      } else if (
+        videoRef.current.canPlayType("application/vnd.apple.mpegurl")
+      ) {
+        videoRef.current.src = selectedStream.playbackUrl;
+      }
+    }
+  }, [selectedStream]);
+
   return (
     <div className="home-page">
-      <Navbar />
+      <Navbar onGoLive={() => setShowGoLive(true)} />
+
+      {showGoLive && <GoLive onClose={() => setShowGoLive(false)} />}
 
       <div className="home-body">
-        <Sidebar />
-
         <div className="videos">
-          <div className="filter">
-            <button className="active">All</button>
-            <button className="">Gaming</button>
-            <button className="">Music</button>
-            <button className="">Sports</button>
-            <button className="">Esports</button>
-          </div>
-
           <div className="header">
             <span />
-            <h1>Live Now</h1>            
+            <h1>Live Now</h1>
           </div>
 
-          <div className="video-grid">
-            {videos.map((video, i) => (
-              <VideoCard
-                key={i}
-                thumbnail={video.thumbnail}
-                avatar={video.avatar}
-                title={video.title}
-                channelName={video.channelName}
-                category={video.category}
-                watching={video.watching}
-                isLive={video.isLive}
-              />
-            ))}
-          </div>          
+          {!loading && streams.length === 0 && (
+            <p>No streams currently live</p>
+          )}
+
+          {/* Stream Cards */}
+          {!selectedStream && (
+            <div className="video-grid">
+              {streams.map((s, i) => (
+                <div key={i} onClick={() => openStream(s)}>
+                  <VideoCard
+                    key={s.streamId || i}
+                    playbackUrl={s.playbackUrl}
+                    thumbnail={s.thumbnailUrl}
+                    title={s.title}
+                    channelName={s.username}
+                    category={s.category}
+                    watching={s.viewerCount}
+                    isLive={s.isLive}
+                    avatar={s.avatarUrl}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@
 .watch-body {
   display: flex;
   padding: 20px;
-  gap: 20px;
+  gap: 12px;
 
   .left-container {
     flex: 3;
@@ -144,6 +144,31 @@
             color: #ff4d4d;
           }      
         }
+      }
+    }
+  }
+
+  .right-container {
+    border-left: 1px solid #333;
+    padding-left: 12px;
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+
+      span {
+        width: 10px;
+        height: 10px;
+        background: red;
+        border-radius: 50%;
+        margin: 0 12px;
+        opacity: 0.6;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
       }
     }
   }
